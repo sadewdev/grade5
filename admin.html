@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin LAB Management System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="bg-slate-900 text-slate-100 font-['Poppins'] min-h-screen">
+
+  <div class="max-w-6xl mx-auto p-4 sm:p-6">
+    <!-- Header -->
+    <header class="flex items-center justify-between pb-6 border-b border-slate-800 mb-6">
+      <div class="flex items-center gap-3">
+        <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-amber-400 text-2xl">🔒</div>
+        <div>
+          <h1 class="text-2xl font-bold text-white">Next Level Admin LAB</h1>
+          <p class="text-xs text-slate-400">Secure Central Database Management</p>
+        </div>
+      </div>
+      <div id="authStatus" class="hidden flex items-center gap-4">
+        <span id="userEmail" class="text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full"></span>
+        <button onclick="handleLogout()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition">Logout</button>
+      </div>
+    </header>
+
+    <!-- Login View -->
+    <div id="loginSection" class="max-w-md mx-auto my-12 bg-slate-800/80 border border-slate-700 p-8 rounded-3xl shadow-2xl">
+      <h2 class="text-xl font-bold text-white mb-2">Admin Security Gate</h2>
+      <p class="text-slate-400 text-xs mb-6">ඇතුළුවීමට ඔබගේ පහසුකම් සපයා ඇති Admin Credential භාවිත කරන්න.</p>
+      
+      <form onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Email Address</label>
+          <input type="email" id="adminEmail" required placeholder="admin@domain.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Password</label>
+          <input type="password" id="adminPassword" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-500">
+        </div>
+        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold py-3 rounded-xl transition shadow-lg">Authenticate & Access</button>
+      </form>
+    </div>
+
+    <!-- Dashboard Content View (Hidden until Auth) -->
+    <div id="dashboardSection" class="hidden space-y-8">
+      
+      <!-- Action Bar -->
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-800/40 p-4 rounded-2xl border border-slate-800">
+        <h2 class="text-lg font-bold text-slate-200">Database Questions Registry</h2>
+        <button onclick="openQuestionModal()" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-5 py-2.5 rounded-xl transition flex items-center justify-center gap-2">
+          <span>➕</span> අලුත් ප්‍රශ්නයක් ඇතුළත් කරන්න
+        </button>
+      </div>
+
+      <!-- Data Table -->
+      <div class="bg-slate-800/50 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-300">
+            <thead class="bg-slate-900/80 text-xs text-slate-400 uppercase border-b border-slate-800">
+              <tr>
+                <th class="p-4">ID</th>
+                <th class="p-4">Level</th>
+                <th class="p-4">Category</th>
+                <th class="p-4">Question</th>
+                <th class="p-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="questionsTableBody" class="divide-y divide-slate-800">
+              <!-- Loaded Dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Add/Edit Question -->
+  <div id="questionModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-800 border border-slate-700 rounded-3xl max-w-2xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center pb-4 border-b border-slate-700 mb-4">
+        <h3 id="modalTitle" class="text-lg font-bold text-white">➕ අලුත් ප්‍රශ්නයක් ඇතුළත් කිරීම</h3>
+        <button onclick="closeQuestionModal()" class="text-slate-400 hover:text-white font-bold text-xl">✕</button>
+      </div>
+
+      <form onsubmit="saveQuestion(event)" class="space-y-4">
+        <input type="hidden" id="editQuestionId">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Level</label>
+            <select id="qLevel" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm">
+              <option value="1">Level 1: පරිසරය</option>
+              <option value="2">Level 2: සිංහල</option>
+              <option value="3">Level 3: ගණිතය</option>
+              <option value="4">Level 4: තර්කනය</option>
+              <option value="5">Level 5: ශිෂ්‍යත්වය Final</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Category Name</label>
+            <input type="text" id="qCategory" required placeholder="උදා: පරිසරය" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Question Text</label>
+          <textarea id="qText" rows="2" required placeholder="ප්‍රශ්නය..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">පිළිතුර 1</label>
+            <input type="text" id="qOpt0" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">පිළිතුර 2</label>
+            <input type="text" id="qOpt1" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">පිළිතුර 3</label>
+            <input type="text" id="qOpt2" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-sm">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">නිවැරදි පිළිතුර Index</label>
+            <select id="qCorrect" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm">
+              <option value="0">පිළිතුර 1</option>
+              <option value="1">පිළිතුර 2</option>
+              <option value="2">පිළිතුර 3</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">රූපයේ Link එක (Optional)</label>
+            <input type="url" id="qImage" placeholder="https://..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">විස්තරය (Explanation)</label>
+          <textarea id="qExplanation" rows="2" required placeholder="තවත් වැරදෙන්නේ නැති වෙන්න විස්තරය..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">මතක තියාගන්න ලේසි ක්‍රමය (Tip)</label>
+          <input type="text" id="qTip" required placeholder="ලෙහෙසි ක්‍රමය..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm">
+        </div>
+
+        <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold py-3 rounded-xl transition">Cloud DB එකට සුරකින්න</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+
+    window.onload = () => { checkAuth(); };
+
+    async function checkAuth() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        document.getElementById("loginSection").classList.add("hidden");
+        document.getElementById("dashboardSection").classList.remove("hidden");
+        document.getElementById("authStatus").classList.remove("hidden");
+        document.getElementById("userEmail").textContent = session.user.email;
+        loadAdminQuestions();
+      } else {
+        document.getElementById("loginSection").classList.remove("hidden");
+        document.getElementById("dashboardSection").classList.add("hidden");
+        document.getElementById("authStatus").classList.add("hidden");
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById("adminEmail").value.trim();
+      const password = document.getElementById("adminPassword").value.trim();
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        alert("Login Error: " + error.message);
+      } else {
+        checkAuth();
+      }
+    }
+
+    async function handleLogout() {
+      await supabase.auth.signOut();
+      checkAuth();
+    }
+
+    async function loadAdminQuestions() {
+      const tbody = document.getElementById("questionsTableBody");
+      tbody.innerHTML = "<tr><td colspan='5' class='p-4 text-center text-slate-500'>දත්ත පූරණය වේ...</td></tr>";
+
+      const { data, error } = await supabase.from('questions').select('*').order('id', { ascending: false });
+
+      if (error) {
+        tbody.innerHTML = `<tr><td colspan='5' class='p-4 text-center text-rose-500'>දෝෂයක් සිදුවිය: ${error.message}</td></tr>`;
+        return;
+      }
+
+      if (data.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='5' class='p-4 text-center text-slate-500'>ප්‍රශ්න කිසිවක් හමු නොවීය.</td></tr>";
+        return;
+      }
+
+      tbody.innerHTML = "";
+      data.forEach(q => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-800/80 transition";
+        tr.innerHTML = `
+          <td class="p-4 font-mono text-slate-400">#${q.id}</td>
+          <td class="p-4 font-bold text-amber-400">L${q.level_id}</td>
+          <td class="p-4 font-semibold text-slate-300">${q.category}</td>
+          <td class="p-4 text-slate-200">${q.question.substring(0, 50)}...</td>
+          <td class="p-4 text-right space-x-2">
+            <button onclick="editQuestion(${q.id})" class="text-xs bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3 py-1.5 rounded-lg hover:bg-amber-500/20">Edit</button>
+            <button onclick="deleteQuestion(${q.id})" class="text-xs bg-rose-500/10 border border-rose-500/30 text-rose-400 px-3 py-1.5 rounded-lg hover:bg-rose-500/20">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openQuestionModal() {
+      document.getElementById("editQuestionId").value = "";
+      document.getElementById("modalTitle").textContent = "➕ අලුත් ප්‍රශ්නයක් ඇතුළත් කිරීම";
+      document.getElementById("qCategory").value = "";
+      document.getElementById("qText").value = "";
+      document.getElementById("qOpt0").value = "";
+      document.getElementById("qOpt1").value = "";
+      document.getElementById("qOpt2").value = "";
+      document.getElementById("qExplanation").value = "";
+      document.getElementById("qTip").value = "";
+      document.getElementById("qImage").value = "";
+      document.getElementById("questionModal").classList.remove("hidden");
+    }
+
+    function closeQuestionModal() {
+      document.getElementById("questionModal").classList.add("hidden");
+    }
+
+    async function editQuestion(id) {
+      const { data, error } = await supabase.from('questions').select('*').eq('id', id).single();
+      if (error) return alert("දත්ත ලබා ගැනීමට නොහැකි විය!");
+
+      document.getElementById("editQuestionId").value = data.id;
+      document.getElementById("modalTitle").textContent = `✏️ ප්‍රශ්නය සංස්කරණය (#${data.id})`;
+      document.getElementById("qLevel").value = data.level_id;
+      document.getElementById("qCategory").value = data.category;
+      document.getElementById("qText").value = data.question;
+      document.getElementById("qOpt0").value = data.options[0] || "";
+      document.getElementById("qOpt1").value = data.options[1] || "";
+      document.getElementById("qOpt2").value = data.options[2] || "";
+      document.getElementById("qCorrect").value = data.correct;
+      document.getElementById("qExplanation").value = data.explanation;
+      document.getElementById("qTip").value = data.tip;
+      document.getElementById("qImage").value = data.image || "";
+
+      document.getElementById("questionModal").classList.remove("hidden");
+    }
+
+    async function saveQuestion(e) {
+      e.preventDefault();
+      const id = document.getElementById("editQuestionId").value;
+
+      const payload = {
+        level_id: parseInt(document.getElementById("qLevel").value),
+        category: document.getElementById("qCategory").value.trim(),
+        question: document.getElementById("qText").value.trim(),
+        options: [
+          document.getElementById("qOpt0").value.trim(),
+          document.getElementById("qOpt1").value.trim(),
+          document.getElementById("qOpt2").value.trim()
+        ],
+        correct: parseInt(document.getElementById("qCorrect").value),
+        explanation: document.getElementById("qExplanation").value.trim(),
+        tip: document.getElementById("qTip").value.trim(),
+        image: document.getElementById("qImage").value.trim()
+      };
+
+      let error;
+      if (id) {
+        ({ error } = await supabase.from('questions').update(payload).eq('id', id));
+      } else {
+        ({ error } = await supabase.from('questions').insert([payload]));
+      }
+
+      if (error) {
+        alert("සුරැකීමේ දෝෂයක්: " + error.message);
+      } else {
+        alert("සාර්ථකයි!");
+        closeQuestionModal();
+        loadAdminQuestions();
+      }
+    }
+
+    async function deleteQuestion(id) {
+      if (!confirm(`නියත වශයෙන්ම #${id} ප්‍රශ්නය මකා දැමීමට අවශ්‍යද?`)) return;
+
+      const { error } = await supabase.from('questions').delete().eq('id', id);
+      if (error) {
+        alert("මකා දැමීමේ දෝෂයක්: " + error.message);
+      } else {
+        loadAdminQuestions();
+      }
+    }
+  </script>
+</body>
+</html>
