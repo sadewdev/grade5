@@ -10,15 +10,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body class="bg-slate-900 text-slate-100 font-['Poppins'] min-h-screen">
-
   <div class="max-w-6xl mx-auto p-4 sm:p-6">
-    <!-- Header -->
     <header class="flex items-center justify-between pb-6 border-b border-slate-800 mb-6">
       <div class="flex items-center gap-3">
         <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-amber-400 text-2xl">🔒</div>
         <div>
           <h1 class="text-2xl font-bold text-white">Next Level Admin LAB</h1>
-          <p class="text-xs text-slate-400">Secure Central Database Management</p>
+          <p class="text-xs text-slate-400">Database Management for Grade 4/5 App</p>
         </div>
       </div>
       <div id="authStatus" class="hidden flex items-center gap-4">
@@ -27,27 +25,26 @@
       </div>
     </header>
 
-    <!-- Login View -->
-    <div id="loginSection" class="max-w-md mx-auto my-12 bg-slate-800/80 border border-slate-700 p-8 rounded-3xl shadow-2xl">
-      <h2 class="text-xl font-bold text-white mb-2">Admin Security Gate</h2>
-      <div id="loginAlert" class="hidden mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold"></div>
+    <!-- Login -->
+    <div id="loginSection" class="max-w-md mx-auto my-12 bg-slate-800 border border-slate-700 p-8 rounded-3xl shadow-2xl">
+      <h2 class="text-xl font-bold text-white mb-4">Admin Access</h2>
       <form id="adminLoginForm" onsubmit="handleLogin(event)" class="space-y-4">
-        <input type="email" id="adminEmail" required placeholder="admin@domain.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:border-amber-500">
-        <input type="password" id="adminPassword" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:border-amber-500">
-        <button type="submit" id="loginBtn" class="w-full bg-amber-500 text-slate-950 font-extrabold py-3 rounded-xl">Authenticate & Access</button>
+        <input type="email" id="adminEmail" required placeholder="admin@domain.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 focus:border-amber-500">
+        <input type="password" id="adminPassword" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 focus:border-amber-500">
+        <button type="submit" class="w-full bg-amber-500 text-slate-950 font-extrabold py-3 rounded-xl">Login</button>
       </form>
     </div>
 
-    <!-- Dashboard View -->
-    <div id="dashboardSection" class="hidden space-y-8">
-      <div class="flex justify-between items-center bg-slate-800/40 p-4 rounded-2xl border border-slate-800">
-        <h2 class="text-lg font-bold">Database Questions Registry</h2>
-        <button onclick="openModal()" class="bg-emerald-500 text-slate-950 font-bold px-5 py-2.5 rounded-xl">➕ Add New Question</button>
+    <!-- Dashboard -->
+    <div id="dashboardSection" class="hidden space-y-6">
+      <div class="flex justify-between items-center bg-slate-800 p-4 rounded-2xl border border-slate-700">
+        <h2 class="text-lg font-bold">Question Database</h2>
+        <button onclick="openModal()" class="bg-emerald-500 text-slate-950 font-bold px-5 py-2.5 rounded-xl">➕ Add Question</button>
       </div>
-      <div class="bg-slate-800/50 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="bg-slate-800/50 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
         <table class="w-full text-left text-sm">
           <thead class="bg-slate-900/80 text-xs text-slate-400 uppercase">
-            <tr><th class="p-4">ID</th><th class="p-4">Level</th><th class="p-4">Category</th><th class="p-4">Question</th><th class="p-4 text-right">Actions</th></tr>
+            <tr><th class="p-4">Level</th><th class="p-4">Category</th><th class="p-4">Question</th><th class="p-4 text-right">Actions</th></tr>
           </thead>
           <tbody id="questionsTableBody" class="divide-y divide-slate-800"></tbody>
         </table>
@@ -55,28 +52,38 @@
     </div>
   </div>
 
-  <!-- Add/Edit Modal -->
+  <!-- Modal -->
   <div id="questionModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-slate-800 border border-slate-700 rounded-3xl max-w-2xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-4">
-        <h3 id="modalTitle" class="text-lg font-bold">➕ අලුත් ප්‍රශ්නයක්</h3>
-        <button onclick="closeModal()" class="text-slate-400 font-bold text-xl">✕</button>
+        <h3 id="modalTitle" class="text-lg font-bold text-white">➕ අලුත් ප්‍රශ්නයක්</h3>
+        <button onclick="closeModal()" class="text-slate-400 text-xl font-bold">✕</button>
       </div>
       <form onsubmit="saveQuestion(event)" class="space-y-4">
         <input type="hidden" id="qId">
         <div class="grid grid-cols-2 gap-4">
-          <select id="qLevel" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm"><option value="1">Level 1</option><option value="2">Level 2</option></select>
-          <input type="text" id="qCat" required placeholder="Category" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm">
+          <select id="qLevel" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white"><option value="1">Level 1</option><option value="2">Level 2</option><option value="3">Level 3</option><option value="4">Level 4</option><option value="5">Level 5</option></select>
+          <input type="text" id="qCat" required placeholder="Category (උදා: පරිසරය)" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white">
         </div>
-        <textarea id="qText" required placeholder="ප්‍රශ්නය..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm"></textarea>
+        <textarea id="qText" required placeholder="ප්‍රශ්නය..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white"></textarea>
+        
         <div class="grid grid-cols-3 gap-2">
-          <input type="text" id="opt0" required placeholder="පිළිතුර 1" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-sm">
-          <input type="text" id="opt1" required placeholder="පිළිතුර 2" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-sm">
-          <input type="text" id="opt2" required placeholder="පිළිතුර 3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-sm">
+          <input type="text" id="opt0" required placeholder="පිළිතුර 1" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-sm text-white">
+          <input type="text" id="opt1" required placeholder="පිළිතුර 2" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-sm text-white">
+          <input type="text" id="opt2" required placeholder="පිළිතුර 3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-sm text-white">
         </div>
-        <select id="qCorrect" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm">
-          <option value="0">පිළිතුර 1 නිවැරදියි</option><option value="1">පිළිතුර 2 නිවැරදියි</option><option value="2">පිළිතුර 3 නිවැරදියි</option>
-        </select>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <select id="qCorrect" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white">
+            <option value="0">පිළිතුර 1 නිවැරදියි</option><option value="1">පිළිතුර 2 නිවැරදියි</option><option value="2">පිළිතුර 3 නිවැරදියි</option>
+          </select>
+          <input type="url" id="qImg" placeholder="Image URL (Optional)" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white">
+        </div>
+
+        <!-- Missing fields that caused the error[cite: 21] -->
+        <textarea id="qExplanation" required placeholder="වැරදුනොත් තේරුම් කරදෙන විස්තරය (Guide Explanation)..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white"></textarea>
+        <input type="text" id="qTip" required placeholder="මතක තියාගන්න ලේසි ක්‍රමය (Memory Trick)..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white">
+
         <button type="submit" class="w-full bg-emerald-500 text-slate-950 font-bold py-3 rounded-xl mt-4">Save to Database</button>
       </form>
     </div>
@@ -109,21 +116,17 @@
       else checkAuth();
     }
 
-    async function handleLogout() {
-      await supabaseClient.auth.signOut();
-      checkAuth();
-    }
+    async function handleLogout() { await supabaseClient.auth.signOut(); checkAuth(); }
 
     async function loadQuestions() {
       const tbody = document.getElementById("questionsTableBody");
       const { data, error } = await supabaseClient.from('questions').select('*').order('id', { ascending: false });
-      if (error) return tbody.innerHTML = `<tr><td colspan='5' class='text-center p-4 text-red-500'>Error</td></tr>`;
       tbody.innerHTML = "";
-      if(data.length === 0) tbody.innerHTML = "<tr><td colspan='5' class='text-center p-4 text-slate-500'>No questions found.</td></tr>";
+      if (error || data.length === 0) return tbody.innerHTML = "<tr><td colspan='4' class='text-center p-4 text-slate-500'>No questions found.</td></tr>";
       data.forEach(q => {
         tbody.innerHTML += `
-          <tr class="hover:bg-slate-800">
-            <td class="p-4">#${q.id}</td><td class="p-4">L${q.level_id}</td><td class="p-4">${q.category}</td><td class="p-4">${q.question.substring(0,40)}...</td>
+          <tr class="hover:bg-slate-800 border-b border-slate-800">
+            <td class="p-4">L${q.level_id}</td><td class="p-4">${q.category}</td><td class="p-4">${q.question.substring(0,40)}...</td>
             <td class="p-4 text-right space-x-2">
               <button onclick='editQ(${JSON.stringify(q)})' class="text-xs bg-amber-500/20 text-amber-400 px-3 py-1 rounded">Edit</button>
               <button onclick="delQ(${q.id})" class="text-xs bg-rose-500/20 text-rose-400 px-3 py-1 rounded">Delete</button>
@@ -139,37 +142,41 @@
       openModal();
       document.getElementById("modalTitle").textContent = "✏️ Edit Question #" + q.id;
       document.getElementById("qId").value = q.id;
-      document.getElementById("qLevel").value = q.level_id;
-      document.getElementById("qCat").value = q.category;
+      document.getElementById("qLevel").value = q.level_id; document.getElementById("qCat").value = q.category;
       document.getElementById("qText").value = q.question;
-      document.getElementById("opt0").value = q.options[0] || "";
-      document.getElementById("opt1").value = q.options[1] || "";
-      document.getElementById("opt2").value = q.options[2] || "";
+      document.getElementById("opt0").value = q.options[0]; document.getElementById("opt1").value = q.options[1]; document.getElementById("opt2").value = q.options[2];
       document.getElementById("qCorrect").value = q.correct;
+      document.getElementById("qExplanation").value = q.explanation || "";
+      document.getElementById("qTip").value = q.tip || "";
+      document.getElementById("qImg").value = q.image || "";
     }
 
     async function saveQuestion(e) {
       e.preventDefault();
       const id = document.getElementById("qId").value;
+      
+      // Payload with missing fields[cite: 21] added[cite: 20]
       const payload = {
-        level_id: parseInt(document.getElementById("qLevel").value), category: document.getElementById("qCat").value,
-        question: document.getElementById("qText").value, options: [document.getElementById("opt0").value, document.getElementById("opt1").value, document.getElementById("opt2").value],
-        correct: parseInt(document.getElementById("qCorrect").value)
+        level_id: parseInt(document.getElementById("qLevel").value),
+        category: document.getElementById("qCat").value,
+        question: document.getElementById("qText").value,
+        options: [document.getElementById("opt0").value, document.getElementById("opt1").value, document.getElementById("opt2").value],
+        correct: parseInt(document.getElementById("qCorrect").value),
+        explanation: document.getElementById("qExplanation").value,
+        tip: document.getElementById("qTip").value,
+        image: document.getElementById("qImg").value
       };
       
       let error;
-      if (id) { ({ error } = await supabaseClient.from('questions').update(payload).eq('id', id)); } 
-      else { ({ error } = await supabaseClient.from('questions').insert([payload])); }
+      if (id) ({ error } = await supabaseClient.from('questions').update(payload).eq('id', id));
+      else ({ error } = await supabaseClient.from('questions').insert([payload]));
       
       if (error) alert("Error: " + error.message);
       else { closeModal(); loadQuestions(); }
     }
 
     async function delQ(id) {
-      if(confirm("Are you sure?")) {
-        await supabaseClient.from('questions').delete().eq('id', id);
-        loadQuestions();
-      }
+      if(confirm("Are you sure?")) { await supabaseClient.from('questions').delete().eq('id', id); loadQuestions(); }
     }
 
     window.onload = checkAuth;
