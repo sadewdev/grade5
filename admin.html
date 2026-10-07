@@ -31,8 +31,11 @@
     <div id="loginSection" class="max-w-md mx-auto my-12 bg-slate-800/80 border border-slate-700 p-8 rounded-3xl shadow-2xl">
       <h2 class="text-xl font-bold text-white mb-2">Admin Security Gate</h2>
       <p class="text-slate-400 text-xs mb-6">ඇතුළුවීමට ඔබගේ පහසුකම් සපයා ඇති Admin Credential භාවිත කරන්න.</p>
-      
-      <form onsubmit="handleLogin(event)" class="space-y-4">
+
+      <!-- Alert Box for Error Messages -->
+      <div id="loginAlert" class="hidden mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold"></div>
+
+      <form id="adminLoginForm" onsubmit="handleLogin(event)" class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-300 mb-1">Email Address</label>
           <input type="email" id="adminEmail" required placeholder="admin@domain.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-500">
@@ -41,13 +44,14 @@
           <label class="block text-xs font-bold text-slate-300 mb-1">Password</label>
           <input type="password" id="adminPassword" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-500">
         </div>
-        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold py-3 rounded-xl transition shadow-lg">Authenticate & Access</button>
+        <button type="submit" id="loginBtn" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold py-3 rounded-xl transition shadow-lg flex justify-center items-center gap-2">
+          <span>Authenticate & Access</span>
+        </button>
       </form>
     </div>
 
     <!-- Dashboard Content View (Hidden until Auth) -->
     <div id="dashboardSection" class="hidden space-y-8">
-      
       <!-- Action Bar -->
       <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-800/40 p-4 rounded-2xl border border-slate-800">
         <h2 class="text-lg font-bold text-slate-200">Database Questions Registry</h2>
@@ -129,188 +133,4 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-bold text-slate-300 mb-1">නිවැරදි පිළිතුර Index</label>
-            <select id="qCorrect" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm">
-              <option value="0">පිළිතුර 1</option>
-              <option value="1">පිළිතුර 2</option>
-              <option value="2">පිළිතුර 3</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">රූපයේ Link එක (Optional)</label>
-            <input type="url" id="qImage" placeholder="https://..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm">
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">විස්තරය (Explanation)</label>
-          <textarea id="qExplanation" rows="2" required placeholder="තවත් වැරදෙන්නේ නැති වෙන්න විස්තරය..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm"></textarea>
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">මතක තියාගන්න ලේසි ක්‍රමය (Tip)</label>
-          <input type="text" id="qTip" required placeholder="ලෙහෙසි ක්‍රමය..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm">
-        </div>
-
-        <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold py-3 rounded-xl transition">Cloud DB එකට සුරකින්න</button>
-      </form>
-    </div>
-  </div>
-
-  <script>
-    const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-
-    window.onload = () => { checkAuth(); };
-
-    async function checkAuth() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        document.getElementById("loginSection").classList.add("hidden");
-        document.getElementById("dashboardSection").classList.remove("hidden");
-        document.getElementById("authStatus").classList.remove("hidden");
-        document.getElementById("userEmail").textContent = session.user.email;
-        loadAdminQuestions();
-      } else {
-        document.getElementById("loginSection").classList.remove("hidden");
-        document.getElementById("dashboardSection").classList.add("hidden");
-        document.getElementById("authStatus").classList.add("hidden");
-      }
-    }
-
-    async function handleLogin(e) {
-      e.preventDefault();
-      const email = document.getElementById("adminEmail").value.trim();
-      const password = document.getElementById("adminPassword").value.trim();
-
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        alert("Login Error: " + error.message);
-      } else {
-        checkAuth();
-      }
-    }
-
-    async function handleLogout() {
-      await supabase.auth.signOut();
-      checkAuth();
-    }
-
-    async function loadAdminQuestions() {
-      const tbody = document.getElementById("questionsTableBody");
-      tbody.innerHTML = "<tr><td colspan='5' class='p-4 text-center text-slate-500'>දත්ත පූරණය වේ...</td></tr>";
-
-      const { data, error } = await supabase.from('questions').select('*').order('id', { ascending: false });
-
-      if (error) {
-        tbody.innerHTML = `<tr><td colspan='5' class='p-4 text-center text-rose-500'>දෝෂයක් සිදුවිය: ${error.message}</td></tr>`;
-        return;
-      }
-
-      if (data.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='5' class='p-4 text-center text-slate-500'>ප්‍රශ්න කිසිවක් හමු නොවීය.</td></tr>";
-        return;
-      }
-
-      tbody.innerHTML = "";
-      data.forEach(q => {
-        const tr = document.createElement("tr");
-        tr.className = "hover:bg-slate-800/80 transition";
-        tr.innerHTML = `
-          <td class="p-4 font-mono text-slate-400">#${q.id}</td>
-          <td class="p-4 font-bold text-amber-400">L${q.level_id}</td>
-          <td class="p-4 font-semibold text-slate-300">${q.category}</td>
-          <td class="p-4 text-slate-200">${q.question.substring(0, 50)}...</td>
-          <td class="p-4 text-right space-x-2">
-            <button onclick="editQuestion(${q.id})" class="text-xs bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3 py-1.5 rounded-lg hover:bg-amber-500/20">Edit</button>
-            <button onclick="deleteQuestion(${q.id})" class="text-xs bg-rose-500/10 border border-rose-500/30 text-rose-400 px-3 py-1.5 rounded-lg hover:bg-rose-500/20">Delete</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function openQuestionModal() {
-      document.getElementById("editQuestionId").value = "";
-      document.getElementById("modalTitle").textContent = "➕ අලුත් ප්‍රශ්නයක් ඇතුළත් කිරීම";
-      document.getElementById("qCategory").value = "";
-      document.getElementById("qText").value = "";
-      document.getElementById("qOpt0").value = "";
-      document.getElementById("qOpt1").value = "";
-      document.getElementById("qOpt2").value = "";
-      document.getElementById("qExplanation").value = "";
-      document.getElementById("qTip").value = "";
-      document.getElementById("qImage").value = "";
-      document.getElementById("questionModal").classList.remove("hidden");
-    }
-
-    function closeQuestionModal() {
-      document.getElementById("questionModal").classList.add("hidden");
-    }
-
-    async function editQuestion(id) {
-      const { data, error } = await supabase.from('questions').select('*').eq('id', id).single();
-      if (error) return alert("දත්ත ලබා ගැනීමට නොහැකි විය!");
-
-      document.getElementById("editQuestionId").value = data.id;
-      document.getElementById("modalTitle").textContent = `✏️ ප්‍රශ්නය සංස්කරණය (#${data.id})`;
-      document.getElementById("qLevel").value = data.level_id;
-      document.getElementById("qCategory").value = data.category;
-      document.getElementById("qText").value = data.question;
-      document.getElementById("qOpt0").value = data.options[0] || "";
-      document.getElementById("qOpt1").value = data.options[1] || "";
-      document.getElementById("qOpt2").value = data.options[2] || "";
-      document.getElementById("qCorrect").value = data.correct;
-      document.getElementById("qExplanation").value = data.explanation;
-      document.getElementById("qTip").value = data.tip;
-      document.getElementById("qImage").value = data.image || "";
-
-      document.getElementById("questionModal").classList.remove("hidden");
-    }
-
-    async function saveQuestion(e) {
-      e.preventDefault();
-      const id = document.getElementById("editQuestionId").value;
-
-      const payload = {
-        level_id: parseInt(document.getElementById("qLevel").value),
-        category: document.getElementById("qCategory").value.trim(),
-        question: document.getElementById("qText").value.trim(),
-        options: [
-          document.getElementById("qOpt0").value.trim(),
-          document.getElementById("qOpt1").value.trim(),
-          document.getElementById("qOpt2").value.trim()
-        ],
-        correct: parseInt(document.getElementById("qCorrect").value),
-        explanation: document.getElementById("qExplanation").value.trim(),
-        tip: document.getElementById("qTip").value.trim(),
-        image: document.getElementById("qImage").value.trim()
-      };
-
-      let error;
-      if (id) {
-        ({ error } = await supabase.from('questions').update(payload).eq('id', id));
-      } else {
-        ({ error } = await supabase.from('questions').insert([payload]));
-      }
-
-      if (error) {
-        alert("සුරැකීමේ දෝෂයක්: " + error.message);
-      } else {
-        alert("සාර්ථකයි!");
-        closeQuestionModal();
-        loadAdminQuestions();
-      }
-    }
-
-    async function deleteQuestion(id) {
-      if (!confirm(`නියත වශයෙන්ම #${id} ප්‍රශ්නය මකා දැමීමට අවශ්‍යද?`)) return;
-
-      const { error } = await supabase.from('questions').delete().eq('id', id);
-      if (error) {
-        alert("මකා දැමීමේ දෝෂයක්: " + error.message);
-      } else {
-        loadAdminQuestions();
-      }
-    }
-  </script>
-</body>
-</html>
+            <select id="qCorrect" class="w-
