@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="si">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,7 +30,7 @@
     <!-- Login View -->
     <div id="loginSection" class="max-w-md mx-auto my-12 bg-slate-800/80 border border-slate-700 p-8 rounded-3xl shadow-2xl">
       <h2 class="text-xl font-bold text-white mb-2">Admin Security Gate</h2>
-      <p class="text-slate-400 text-xs mb-6">ඇතුළුවීමට ඔබගේ පහසුකම් සපයා ඇති Admin Credential භාවිත කරන්න.</p>
+      <p class="text-slate-400 text-xs mb-6">Enter your Admin credentials to gain access.</p>
 
       <!-- Alert Box for Error Messages -->
       <div id="loginAlert" class="hidden mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold"></div>
@@ -50,17 +50,15 @@
       </form>
     </div>
 
-    <!-- Dashboard Content View (Hidden until Auth) -->
+    <!-- Dashboard View -->
     <div id="dashboardSection" class="hidden space-y-8">
-      <!-- Action Bar -->
       <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-800/40 p-4 rounded-2xl border border-slate-800">
         <h2 class="text-lg font-bold text-slate-200">Database Questions Registry</h2>
         <button onclick="openQuestionModal()" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-5 py-2.5 rounded-xl transition flex items-center justify-center gap-2">
-          <span>➕</span> අලුත් ප්‍රශ්නයක් ඇතුළත් කරන්න
+          <span>➕</span> Add New Question
         </button>
       </div>
 
-      <!-- Data Table -->
       <div class="bg-slate-800/50 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm text-slate-300">
@@ -74,7 +72,6 @@
               </tr>
             </thead>
             <tbody id="questionsTableBody" class="divide-y divide-slate-800">
-              <!-- Loaded Dynamically -->
             </tbody>
           </table>
         </div>
@@ -82,55 +79,124 @@
     </div>
   </div>
 
-  <!-- Modal for Add/Edit Question -->
-  <div id="questionModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-800 border border-slate-700 rounded-3xl max-w-2xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center pb-4 border-b border-slate-700 mb-4">
-        <h3 id="modalTitle" class="text-lg font-bold text-white">➕ අලුත් ප්‍රශ්නයක් ඇතුළත් කිරීම</h3>
-        <button onclick="closeQuestionModal()" class="text-slate-400 hover:text-white font-bold text-xl">✕</button>
-      </div>
+  <script>
+    let supabaseClient = null;
 
-      <form onsubmit="saveQuestion(event)" class="space-y-4">
-        <input type="hidden" id="editQuestionId">
+    function showAlert(msg) {
+      const alertBox = document.getElementById("loginAlert");
+      alertBox.textContent = msg;
+      alertBox.classList.remove("hidden");
+    }
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">Level</label>
-            <select id="qLevel" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm">
-              <option value="1">Level 1: පරිසරය</option>
-              <option value="2">Level 2: සිංහල</option>
-              <option value="3">Level 3: ගණිතය</option>
-              <option value="4">Level 4: තර්කනය</option>
-              <option value="5">Level 5: ශිෂ්‍යත්වය Final</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">Category Name</label>
-            <input type="text" id="qCategory" required placeholder="උදා: පරිසරය" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm">
-          </div>
-        </div>
+    function hideAlert() {
+      document.getElementById("loginAlert").classList.add("hidden");
+    }
 
-        <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">Question Text</label>
-          <textarea id="qText" rows="2" required placeholder="ප්‍රශ්නය..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm"></textarea>
-        </div>
+    function initSupabase() {
+      if (typeof CONFIG === 'undefined' || !CONFIG.SUPABASE_URL || !CONFIG.SUPABASE_ANON_KEY) {
+        showAlert("Config Error: 'config.js' file is missing or CONFIG variables are invalid.");
+        return false;
+      }
+      try {
+        supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+        return true;
+      } catch (err) {
+        showAlert("Supabase Init Failed: " + err.message);
+        return false;
+      }
+    }
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">පිළිතුර 1</label>
-            <input type="text" id="qOpt0" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-sm">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">පිළිතුර 2</label>
-            <input type="text" id="qOpt1" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-sm">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">පිළිතුර 3</label>
-            <input type="text" id="qOpt2" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-sm">
-          </div>
-        </div>
+    async function checkAuth() {
+      if (!supabaseClient && !initSupabase()) return;
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1">නිවැරදි පිළිතුර Index</label>
-            <select id="qCorrect" class="w-
+      const { data: { session }, error } = await supabaseClient.auth.getSession();
+      
+      if (session) {
+        document.getElementById("loginSection").classList.add("hidden");
+        document.getElementById("dashboardSection").classList.remove("hidden");
+        document.getElementById("authStatus").classList.remove("hidden");
+        document.getElementById("userEmail").textContent = session.user.email;
+        loadQuestions();
+      } else {
+        document.getElementById("loginSection").classList.remove("hidden");
+        document.getElementById("dashboardSection").classList.add("hidden");
+        document.getElementById("authStatus").classList.add("hidden");
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      hideAlert();
+
+      if (!supabaseClient && !initSupabase()) return;
+
+      const email = document.getElementById("adminEmail").value.trim();
+      const password = document.getElementById("adminPassword").value.trim();
+      const btn = document.getElementById("loginBtn");
+
+      btn.disabled = true;
+      btn.innerHTML = "<span>Authenticating... ⏳</span>";
+
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+        if (error) {
+          showAlert("Login Error: " + error.message);
+        } else {
+          console.log("Logged in successfully:", data);
+          await checkAuth();
+        }
+      } catch (err) {
+        showAlert("Unexpected Error: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = "<span>Authenticate & Access</span>";
+      }
+    }
+
+    async function handleLogout() {
+      if (supabaseClient) {
+        await supabaseClient.auth.signOut();
+        checkAuth();
+      }
+    }
+
+    async function loadQuestions() {
+      const tbody = document.getElementById("questionsTableBody");
+      tbody.innerHTML = "<tr><td colspan='5' class='p-4 text-center text-slate-500'>Loading questions...</td></tr>";
+
+      const { data, error } = await supabaseClient.from('questions').select('*').order('id', { ascending: false });
+
+      if (error) {
+        tbody.innerHTML = `<tr><td colspan='5' class='p-4 text-center text-rose-500'>Error: ${error.message}</td></tr>`;
+        return;
+      }
+
+      if (data.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='5' class='p-4 text-center text-slate-500'>No questions found.</td></tr>";
+        return;
+      }
+
+      tbody.innerHTML = "";
+      data.forEach(q => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-800/80 transition";
+        tr.innerHTML = `
+          <td class="p-4 font-mono text-slate-400">#${q.id}</td>
+          <td class="p-4 font-bold text-amber-400">L${q.level_id}</td>
+          <td class="p-4 font-semibold text-slate-300">${q.category}</td>
+          <td class="p-4 text-slate-200">${q.question.substring(0, 50)}...</td>
+          <td class="p-4 text-right space-x-2">
+            <button class="text-xs bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3 py-1.5 rounded-lg hover:bg-amber-500/20">Edit</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      checkAuth();
+    });
+  </script>
+</body>
+</html>
