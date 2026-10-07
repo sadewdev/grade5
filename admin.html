@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin LAB Management System</title>
+  <title>Next Level Admin LAB</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
@@ -30,87 +30,63 @@
     <!-- Login View -->
     <div id="loginSection" class="max-w-md mx-auto my-12 bg-slate-800/80 border border-slate-700 p-8 rounded-3xl shadow-2xl">
       <h2 class="text-xl font-bold text-white mb-2">Admin Security Gate</h2>
-      <p class="text-slate-400 text-xs mb-6">Enter your Admin credentials to gain access.</p>
-
-      <!-- Alert Box for Error Messages -->
       <div id="loginAlert" class="hidden mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold"></div>
-
       <form id="adminLoginForm" onsubmit="handleLogin(event)" class="space-y-4">
-        <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">Email Address</label>
-          <input type="email" id="adminEmail" required placeholder="admin@domain.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-500">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">Password</label>
-          <input type="password" id="adminPassword" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:outline-none focus:border-amber-500">
-        </div>
-        <button type="submit" id="loginBtn" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold py-3 rounded-xl transition shadow-lg flex justify-center items-center gap-2">
-          <span>Authenticate & Access</span>
-        </button>
+        <input type="email" id="adminEmail" required placeholder="admin@domain.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:border-amber-500">
+        <input type="password" id="adminPassword" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:border-amber-500">
+        <button type="submit" id="loginBtn" class="w-full bg-amber-500 text-slate-950 font-extrabold py-3 rounded-xl">Authenticate & Access</button>
       </form>
     </div>
 
     <!-- Dashboard View -->
     <div id="dashboardSection" class="hidden space-y-8">
-      <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-800/40 p-4 rounded-2xl border border-slate-800">
-        <h2 class="text-lg font-bold text-slate-200">Database Questions Registry</h2>
-        <button onclick="openQuestionModal()" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-5 py-2.5 rounded-xl transition flex items-center justify-center gap-2">
-          <span>➕</span> Add New Question
-        </button>
+      <div class="flex justify-between items-center bg-slate-800/40 p-4 rounded-2xl border border-slate-800">
+        <h2 class="text-lg font-bold">Database Questions Registry</h2>
+        <button onclick="openModal()" class="bg-emerald-500 text-slate-950 font-bold px-5 py-2.5 rounded-xl">➕ Add New Question</button>
       </div>
-
       <div class="bg-slate-800/50 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-slate-300">
-            <thead class="bg-slate-900/80 text-xs text-slate-400 uppercase border-b border-slate-800">
-              <tr>
-                <th class="p-4">ID</th>
-                <th class="p-4">Level</th>
-                <th class="p-4">Category</th>
-                <th class="p-4">Question</th>
-                <th class="p-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="questionsTableBody" class="divide-y divide-slate-800">
-            </tbody>
-          </table>
-        </div>
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-900/80 text-xs text-slate-400 uppercase">
+            <tr><th class="p-4">ID</th><th class="p-4">Level</th><th class="p-4">Category</th><th class="p-4">Question</th><th class="p-4 text-right">Actions</th></tr>
+          </thead>
+          <tbody id="questionsTableBody" class="divide-y divide-slate-800"></tbody>
+        </table>
       </div>
     </div>
   </div>
 
+  <!-- Add/Edit Modal -->
+  <div id="questionModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-800 border border-slate-700 rounded-3xl max-w-2xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-4">
+        <h3 id="modalTitle" class="text-lg font-bold">➕ අලුත් ප්‍රශ්නයක්</h3>
+        <button onclick="closeModal()" class="text-slate-400 font-bold text-xl">✕</button>
+      </div>
+      <form onsubmit="saveQuestion(event)" class="space-y-4">
+        <input type="hidden" id="qId">
+        <div class="grid grid-cols-2 gap-4">
+          <select id="qLevel" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm"><option value="1">Level 1</option><option value="2">Level 2</option></select>
+          <input type="text" id="qCat" required placeholder="Category" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm">
+        </div>
+        <textarea id="qText" required placeholder="ප්‍රශ්නය..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm"></textarea>
+        <div class="grid grid-cols-3 gap-2">
+          <input type="text" id="opt0" required placeholder="පිළිතුර 1" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-sm">
+          <input type="text" id="opt1" required placeholder="පිළිතුර 2" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-sm">
+          <input type="text" id="opt2" required placeholder="පිළිතුර 3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-sm">
+        </div>
+        <select id="qCorrect" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm">
+          <option value="0">පිළිතුර 1 නිවැරදියි</option><option value="1">පිළිතුර 2 නිවැරදියි</option><option value="2">පිළිතුර 3 නිවැරදියි</option>
+        </select>
+        <button type="submit" class="w-full bg-emerald-500 text-slate-950 font-bold py-3 rounded-xl mt-4">Save to Database</button>
+      </form>
+    </div>
+  </div>
+
   <script>
-    let supabaseClient = null;
-
-    function showAlert(msg) {
-      const alertBox = document.getElementById("loginAlert");
-      alertBox.textContent = msg;
-      alertBox.classList.remove("hidden");
-    }
-
-    function hideAlert() {
-      document.getElementById("loginAlert").classList.add("hidden");
-    }
-
-    function initSupabase() {
-      if (typeof CONFIG === 'undefined' || !CONFIG.SUPABASE_URL || !CONFIG.SUPABASE_ANON_KEY) {
-        showAlert("Config Error: 'config.js' file is missing or CONFIG variables are invalid.");
-        return false;
-      }
-      try {
-        supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-        return true;
-      } catch (err) {
-        showAlert("Supabase Init Failed: " + err.message);
-        return false;
-      }
-    }
+    const supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 
     async function checkAuth() {
-      if (!supabaseClient && !initSupabase()) return;
-
-      const { data: { session }, error } = await supabaseClient.auth.getSession();
-      
+      const { data: { session } } = await supabaseClient.auth.getSession();
       if (session) {
         document.getElementById("loginSection").classList.add("hidden");
         document.getElementById("dashboardSection").classList.remove("hidden");
@@ -126,77 +102,77 @@
 
     async function handleLogin(e) {
       e.preventDefault();
-      hideAlert();
-
-      if (!supabaseClient && !initSupabase()) return;
-
-      const email = document.getElementById("adminEmail").value.trim();
-      const password = document.getElementById("adminPassword").value.trim();
-      const btn = document.getElementById("loginBtn");
-
-      btn.disabled = true;
-      btn.innerHTML = "<span>Authenticating... ⏳</span>";
-
-      try {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-
-        if (error) {
-          showAlert("Login Error: " + error.message);
-        } else {
-          console.log("Logged in successfully:", data);
-          await checkAuth();
-        }
-      } catch (err) {
-        showAlert("Unexpected Error: " + err.message);
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = "<span>Authenticate & Access</span>";
-      }
+      const em = document.getElementById("adminEmail").value;
+      const pw = document.getElementById("adminPassword").value;
+      const { error } = await supabaseClient.auth.signInWithPassword({ email: em, password: pw });
+      if (error) alert("Login Error: " + error.message);
+      else checkAuth();
     }
 
     async function handleLogout() {
-      if (supabaseClient) {
-        await supabaseClient.auth.signOut();
-        checkAuth();
-      }
+      await supabaseClient.auth.signOut();
+      checkAuth();
     }
 
     async function loadQuestions() {
       const tbody = document.getElementById("questionsTableBody");
-      tbody.innerHTML = "<tr><td colspan='5' class='p-4 text-center text-slate-500'>Loading questions...</td></tr>";
-
       const { data, error } = await supabaseClient.from('questions').select('*').order('id', { ascending: false });
-
-      if (error) {
-        tbody.innerHTML = `<tr><td colspan='5' class='p-4 text-center text-rose-500'>Error: ${error.message}</td></tr>`;
-        return;
-      }
-
-      if (data.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='5' class='p-4 text-center text-slate-500'>No questions found.</td></tr>";
-        return;
-      }
-
+      if (error) return tbody.innerHTML = `<tr><td colspan='5' class='text-center p-4 text-red-500'>Error</td></tr>`;
       tbody.innerHTML = "";
+      if(data.length === 0) tbody.innerHTML = "<tr><td colspan='5' class='text-center p-4 text-slate-500'>No questions found.</td></tr>";
       data.forEach(q => {
-        const tr = document.createElement("tr");
-        tr.className = "hover:bg-slate-800/80 transition";
-        tr.innerHTML = `
-          <td class="p-4 font-mono text-slate-400">#${q.id}</td>
-          <td class="p-4 font-bold text-amber-400">L${q.level_id}</td>
-          <td class="p-4 font-semibold text-slate-300">${q.category}</td>
-          <td class="p-4 text-slate-200">${q.question.substring(0, 50)}...</td>
-          <td class="p-4 text-right space-x-2">
-            <button class="text-xs bg-amber-500/10 border border-amber-500/30 text-amber-400 px-3 py-1.5 rounded-lg hover:bg-amber-500/20">Edit</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
+        tbody.innerHTML += `
+          <tr class="hover:bg-slate-800">
+            <td class="p-4">#${q.id}</td><td class="p-4">L${q.level_id}</td><td class="p-4">${q.category}</td><td class="p-4">${q.question.substring(0,40)}...</td>
+            <td class="p-4 text-right space-x-2">
+              <button onclick='editQ(${JSON.stringify(q)})' class="text-xs bg-amber-500/20 text-amber-400 px-3 py-1 rounded">Edit</button>
+              <button onclick="delQ(${q.id})" class="text-xs bg-rose-500/20 text-rose-400 px-3 py-1 rounded">Delete</button>
+            </td>
+          </tr>`;
       });
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      checkAuth();
-    });
+    function openModal() { document.getElementById("questionModal").classList.remove("hidden"); document.getElementById("qId").value = ""; }
+    function closeModal() { document.getElementById("questionModal").classList.add("hidden"); }
+    
+    function editQ(q) {
+      openModal();
+      document.getElementById("modalTitle").textContent = "✏️ Edit Question #" + q.id;
+      document.getElementById("qId").value = q.id;
+      document.getElementById("qLevel").value = q.level_id;
+      document.getElementById("qCat").value = q.category;
+      document.getElementById("qText").value = q.question;
+      document.getElementById("opt0").value = q.options[0] || "";
+      document.getElementById("opt1").value = q.options[1] || "";
+      document.getElementById("opt2").value = q.options[2] || "";
+      document.getElementById("qCorrect").value = q.correct;
+    }
+
+    async function saveQuestion(e) {
+      e.preventDefault();
+      const id = document.getElementById("qId").value;
+      const payload = {
+        level_id: parseInt(document.getElementById("qLevel").value), category: document.getElementById("qCat").value,
+        question: document.getElementById("qText").value, options: [document.getElementById("opt0").value, document.getElementById("opt1").value, document.getElementById("opt2").value],
+        correct: parseInt(document.getElementById("qCorrect").value)
+      };
+      
+      let error;
+      if (id) { ({ error } = await supabaseClient.from('questions').update(payload).eq('id', id)); } 
+      else { ({ error } = await supabaseClient.from('questions').insert([payload])); }
+      
+      if (error) alert("Error: " + error.message);
+      else { closeModal(); loadQuestions(); }
+    }
+
+    async function delQ(id) {
+      if(confirm("Are you sure?")) {
+        await supabaseClient.from('questions').delete().eq('id', id);
+        loadQuestions();
+      }
+    }
+
+    window.onload = checkAuth;
   </script>
 </body>
 </html>
